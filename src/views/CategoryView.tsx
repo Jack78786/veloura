@@ -7,12 +7,16 @@ import { motion } from 'motion/react';
 
 export const CategoryView = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
-  const { products } = useProducts();
+  const { products, loading } = useProducts();
   
-  // Capitalize first letter
-  const formattedCategory = categoryName 
+  // Capitalize first letter and handle legacy path
+  let formattedCategory = categoryName 
     ? (categoryName.charAt(0).toUpperCase() + categoryName.slice(1)) as Category
     : 'Bags' as Category;
+
+  if (formattedCategory === 'Accessories' as any) {
+    formattedCategory = 'Lingerie';
+  }
 
   const filteredProducts = products.filter(p => p.category === formattedCategory);
 
@@ -22,6 +26,17 @@ export const CategoryView = () => {
     Shoes: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=2000',
     Lingerie: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=2000',
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-veloura-beige">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs uppercase tracking-[0.3em] text-veloura-gold font-medium">Loading Collection</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="pt-24">

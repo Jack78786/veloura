@@ -8,7 +8,7 @@ import { LookbookView } from './views/LookbookView';
 import { AdminView } from './views/AdminView';
 import { ProductProvider } from './context/ProductContext';
 import { FloatingAdminButton } from './components/FloatingAdminButton';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -19,6 +19,31 @@ const ScrollToTop = () => {
   return null;
 };
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<HomeView />} />
+          <Route path="/lookbook" element={<LookbookView />} />
+          <Route path="/admin" element={<AdminView />} />
+          <Route path="/about" element={<AboutView />} />
+          <Route path="/contact" element={<ContactView />} />
+          <Route path="/:categoryName" element={<CategoryView />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 export default function App() {
   return (
     <ProductProvider>
@@ -27,16 +52,7 @@ export default function App() {
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <div className="flex-grow">
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<HomeView />} />
-                <Route path="/lookbook" element={<LookbookView />} />
-                <Route path="/admin" element={<AdminView />} />
-                <Route path="/:categoryName" element={<CategoryView />} />
-                <Route path="/about" element={<AboutView />} />
-                <Route path="/contact" element={<ContactView />} />
-              </Routes>
-            </AnimatePresence>
+            <AnimatedRoutes />
           </div>
           <FloatingAdminButton />
           <Footer />

@@ -8,9 +8,20 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
 export const HomeView = () => {
-  const { products } = useProducts();
+  const { products, loading } = useProducts();
   const featuredProducts = products.filter(p => p.isFeatured);
   const featuredPins = PINS.slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-veloura-beige">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs uppercase tracking-[0.3em] text-veloura-gold font-medium">Loading Veloura</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main>

@@ -301,6 +301,16 @@ export const AdminView = () => {
           </div>
         </div>
 
+        {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) && (
+          <div className="bg-veloura-beige p-6 rounded-xl mb-12 border border-veloura-gold/20">
+            <h3 className="text-sm font-serif italic mb-2">Demo Mode Active</h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              You are currently in Demo Mode. Any products you add, edit, or delete are saved <strong>locally to this browser only</strong>. 
+              To sync your products across all devices (like your mobile phone), you will need to connect a Supabase database.
+            </p>
+          </div>
+        )}
+
         {/* Product List */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <div className="overflow-x-auto">
