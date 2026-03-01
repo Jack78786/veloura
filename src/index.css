@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  
+  --color-veloura-beige: #F5F2ED;
+  --color-veloura-nude: #E8D5C4;
+  --color-veloura-blush: #FCE4EC;
+  --color-veloura-gold: #D4AF37;
+  --color-veloura-ink: #1A1A1A;
+}
+
+@layer base {
+  body {
+    @apply bg-veloura-beige text-veloura-ink font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+.glass-effect {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
+
+.hover-gold {
+  @apply transition-colors duration-300 hover:text-veloura-gold;
+}
+
+.btn-luxury {
+  @apply px-8 py-3 bg-veloura-ink text-white font-medium tracking-wider uppercase text-xs transition-all duration-300 hover:bg-veloura-gold hover:shadow-lg active:scale-95;
+}
+
+.btn-outline {
+  @apply px-8 py-3 border border-veloura-ink text-veloura-ink font-medium tracking-wider uppercase text-xs transition-all duration-300 hover:bg-veloura-ink hover:text-white active:scale-95;
+}
