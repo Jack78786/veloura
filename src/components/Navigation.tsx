@@ -22,7 +22,7 @@ export const Navbar = () => {
     { name: 'Bags', path: '/bags' },
     { name: 'Clothes', path: '/clothes' },
     { name: 'Shoes', path: '/shoes' },
-    { name: 'Accessories', path: '/accessories' },
+    { name: 'Lingerie', path: '/lingerie' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
@@ -123,7 +123,7 @@ export const Footer = () => {
             <li><Link to="/bags" className="hover:text-white transition-colors">Bags</Link></li>
             <li><Link to="/clothes" className="hover:text-white transition-colors">Clothes</Link></li>
             <li><Link to="/shoes" className="hover:text-white transition-colors">Shoes</Link></li>
-            <li><Link to="/accessories" className="hover:text-white transition-colors">Accessories</Link></li>
+            <li><Link to="/lingerie" className="hover:text-white transition-colors">Lingerie</Link></li>
           </ul>
         </div>
 

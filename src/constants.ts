@@ -79,25 +79,25 @@ export const PRODUCTS: Product[] = [
     category: 'Shoes',
     affiliateUrl: 'https://www.amazon.com/s?k=leather+slides+women',
   },
-  // Accessories
+  // Lingerie
   {
     id: 'a1',
-    name: 'Gold Link Bracelet',
-    price: 145,
-    description: '18k gold plated. A bold yet refined statement piece.',
-    image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&q=80&w=800',
-    category: 'Accessories',
-    affiliateUrl: 'https://www.amazon.com/s?k=gold+link+bracelet',
+    name: 'Seamless Nursing Bra',
+    price: 45,
+    description: 'Ultra-soft, seamless nursing bra designed for ultimate comfort and support. Features one-hand access clips for easy feeding.',
+    image: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=800',
+    category: 'Lingerie',
+    affiliateUrl: 'https://www.amazon.com/s?k=seamless+nursing+bra',
     isFeatured: true,
   },
   {
     id: 'a2',
-    name: 'Silk Scarf - Flora',
-    price: 65,
-    description: 'Hand-painted floral design on pure silk. Versatile and chic.',
-    image: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&q=80&w=800',
-    category: 'Accessories',
-    affiliateUrl: 'https://www.amazon.com/s?k=silk+scarf+women',
+    name: 'Silk Lace Slip',
+    price: 85,
+    description: 'Elegant silk slip with delicate lace detailing. Perfect for lounging or layering.',
+    image: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&q=80&w=800',
+    category: 'Lingerie',
+    affiliateUrl: 'https://www.amazon.com/s?k=silk+lace+slip',
   },
 ];
 

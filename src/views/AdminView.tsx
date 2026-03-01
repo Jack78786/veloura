@@ -45,7 +45,7 @@ export const AdminView = () => {
     isFeatured: false,
   });
 
-  const categories: Category[] = ['Bags', 'Clothes', 'Shoes', 'Accessories'];
+  const categories: Category[] = ['Bags', 'Clothes', 'Shoes', 'Lingerie'];
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

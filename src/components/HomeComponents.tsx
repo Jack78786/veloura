@@ -67,7 +67,7 @@ export const CategoryPreview = () => {
     { name: 'Bags', image: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&q=80&w=800', path: '/bags' },
     { name: 'Clothes', image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&q=80&w=800', path: '/clothes' },
     { name: 'Shoes', image: 'https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?auto=format&fit=crop&q=80&w=800', path: '/shoes' },
-    { name: 'Accessories', image: 'https://images.unsplash.com/photo-1515562141207-7a18b5ce7142?auto=format&fit=crop&q=80&w=800', path: '/accessories' },
+    { name: 'Lingerie', image: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=800', path: '/lingerie' },
   ];
 
   return (

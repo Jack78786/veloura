@@ -1,4 +1,4 @@
-export type Category = 'Bags' | 'Clothes' | 'Shoes' | 'Accessories';
+export type Category = 'Bags' | 'Clothes' | 'Shoes' | 'Lingerie';
 
 export interface Product {
   id: string;
@@ -26,4 +26,4 @@ export interface Pin {
   description?: string;
 }
 
-export type View = 'home' | 'bags' | 'clothes' | 'shoes' | 'accessories' | 'about' | 'contact' | 'lookbook';
+export type View = 'home' | 'bags' | 'clothes' | 'shoes' | 'lingerie' | 'about' | 'contact' | 'lookbook';

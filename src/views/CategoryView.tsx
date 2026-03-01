@@ -20,7 +20,7 @@ export const CategoryView = () => {
     Bags: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=2000',
     Clothes: 'https://images.unsplash.com/photo-1539109132314-34a9c6553876?auto=format&fit=crop&q=80&w=2000',
     Shoes: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=2000',
-    Accessories: 'https://images.unsplash.com/photo-1535633302704-c02f4f7d01d4?auto=format&fit=crop&q=80&w=2000',
+    Lingerie: 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=2000',
   };
 
   return (
