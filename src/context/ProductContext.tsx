@@ -17,17 +17,29 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch products from Supabase on mount
+  // Helper to check if Supabase is configured
+  const isSupabaseConfigured = () => {
+    return (
+      import.meta.env.VITE_SUPABASE_URL && 
+      !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
+    );
+  };
+
+  // Fetch products from Supabase or LocalStorage on mount
   useEffect(() => {
     const fetchProducts = async () => {
-      // Check if Supabase is actually configured
-      const isConfigured = 
-        import.meta.env.VITE_SUPABASE_URL && 
-        !import.meta.env.VITE_SUPABASE_URL.includes('placeholder');
-
-      if (!isConfigured) {
-        console.warn('Supabase not configured. Using initial products.');
-        setProducts(INITIAL_PRODUCTS);
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase not configured. Using LocalStorage/Initial products.');
+        const savedProducts = localStorage.getItem('veloura_demo_products');
+        if (savedProducts) {
+          try {
+            setProducts(JSON.parse(savedProducts));
+          } catch (e) {
+            setProducts(INITIAL_PRODUCTS);
+          }
+        } else {
+          setProducts(INITIAL_PRODUCTS);
+        }
         setLoading(false);
         return;
       }
@@ -59,6 +71,17 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   const addProduct = async (newProduct: Omit<Product, 'id'>) => {
+    if (!isSupabaseConfigured()) {
+      const demoProduct: Product = {
+        ...newProduct,
+        id: `demo-${Date.now()}`
+      };
+      const updatedProducts = [demoProduct, ...products];
+      setProducts(updatedProducts);
+      localStorage.setItem('veloura_demo_products', JSON.stringify(updatedProducts));
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('products')
@@ -76,6 +99,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const updateProduct = async (id: string, updatedFields: Partial<Product>) => {
+    if (!isSupabaseConfigured()) {
+      const updatedProducts = products.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+      setProducts(updatedProducts);
+      localStorage.setItem('veloura_demo_products', JSON.stringify(updatedProducts));
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('products')
@@ -94,6 +124,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const deleteProduct = async (id: string) => {
+    if (!isSupabaseConfigured()) {
+      const updatedProducts = products.filter((p) => p.id !== id);
+      setProducts(updatedProducts);
+      localStorage.setItem('veloura_demo_products', JSON.stringify(updatedProducts));
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('products')
