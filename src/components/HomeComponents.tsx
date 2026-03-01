@@ -8,12 +8,12 @@ export const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000"
-          alt="Luxury Fashion Hero"
+          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=2000"
+          alt="Veloura Luxury Fashion"
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
       {/* Content */}
@@ -24,15 +24,15 @@ export const Hero = () => {
           transition={{ duration: 0.8 }}
           className="text-xs uppercase tracking-[0.5em] mb-6 font-medium"
         >
-          New Collection 2026
+          Veloura Online
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-5xl md:text-7xl lg:text-8xl font-serif mb-8 italic"
+          className="text-5xl md:text-7xl lg:text-9xl font-serif mb-8 italic"
         >
-          Elegance in Every Detail
+          Veloura
         </motion.h1>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

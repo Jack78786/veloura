@@ -1,13 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProducts } from '../context/ProductContext';
 import { Product, Category } from '../types';
-import { Plus, Edit2, Trash2, X, Upload, ExternalLink, Save } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, ExternalLink, Save, LogOut, Mail, Lock } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const AdminView = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsAuthenticated(true);
+      }
+    };
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
@@ -21,6 +46,187 @@ export const AdminView = () => {
   });
 
   const categories: Category[] = ['Bags', 'Clothes', 'Shoes', 'Accessories'];
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Check if Supabase is configured
+    const isConfigured = 
+      import.meta.env.VITE_SUPABASE_URL && 
+      !import.meta.env.VITE_SUPABASE_URL.includes('placeholder');
+
+    if (!isConfigured) {
+      // Demo Mode: Always allow access if email and password are provided
+      if (email && password) {
+        // Automatically save these as the "saved" credentials for this browser
+        localStorage.setItem('demo_admin_email', email);
+        localStorage.setItem('demo_admin_password', password);
+        setIsAuthenticated(true);
+        return;
+      }
+      setError('Please enter an email and password.');
+      return;
+    }
+
+    setIsLoggingIn(true);
+    setError('');
+    
+    try {
+      if (isSignUp) {
+        const { error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (authError) throw authError;
+        setError('Check your email for the confirmation link!');
+      } else {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (authError) throw authError;
+        setIsAuthenticated(true);
+      }
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <main className="pt-32 pb-24 min-h-screen bg-veloura-beige flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl text-center"
+        >
+          <div className="w-16 h-16 bg-veloura-beige rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-8 h-8 text-veloura-gold" />
+          </div>
+          <h1 className="text-3xl font-serif mb-2">{isSignUp ? 'Create Admin Account' : 'Admin Access'}</h1>
+          <p className="text-gray-500 text-sm mb-8">
+            {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) 
+              ? 'Demo Mode: Enter any email and password to access the dashboard.' 
+              : (isSignUp ? 'Register your administrative credentials.' : 'Please enter your administrative credentials to manage the store.')}
+          </p>
+          
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div className="space-y-4 text-left">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-gray-500">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 p-4 pl-12 text-sm rounded-xl focus:ring-1 focus:ring-veloura-gold outline-none"
+                    placeholder="milille59000@gmail.com"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-gray-500">Password</label>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) {
+                        setError('In Demo Mode, you can use any password!');
+                      } else {
+                        setError('To reset your password, please use the Supabase Dashboard or check your email for a reset link if configured.');
+                      }
+                    }}
+                    className="text-[9px] uppercase tracking-widest font-bold text-veloura-gold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 p-4 pl-12 text-sm rounded-xl focus:ring-1 focus:ring-veloura-gold outline-none"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              
+              {error && (
+                <motion.p 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className={`${error.includes('Check your email') ? 'text-green-600' : 'text-red-500'} text-[10px] mt-1 uppercase tracking-wider font-bold`}
+                >
+                  {error}
+                </motion.p>
+              )}
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={isLoggingIn}
+              className="btn-luxury w-full py-4 flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {isLoggingIn ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                isSignUp ? 'Create Account' : 'Enter Dashboard'
+              )}
+            </button>
+
+            {/* Demo Access Button for preview */}
+            {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) && !isSignUp && (
+              <button
+                type="button"
+                onClick={() => {
+                  const savedEmail = localStorage.getItem('demo_admin_email') || 'milille59000@gmail.com';
+                  const savedPass = localStorage.getItem('demo_admin_password') || 'Muhammad@2026';
+                  setEmail(savedEmail);
+                  setPassword(savedPass);
+                  setIsAuthenticated(true);
+                }}
+                className="w-full py-3 text-[10px] uppercase tracking-widest font-bold text-gray-400 border border-dashed border-gray-200 rounded-xl hover:bg-gray-50 hover:text-veloura-gold hover:border-veloura-gold transition-all"
+              >
+                Demo Access (Saved Credentials)
+              </button>
+            )}
+          </form>
+
+          {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) ? null : (
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setError('');
+                }}
+                className="text-[10px] uppercase tracking-widest font-bold text-veloura-gold hover:text-veloura-ink transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Log In' : 'Need an account? Sign Up'}
+              </button>
+            </div>
+          )}
+
+          <p className="mt-8 text-[10px] text-gray-400 uppercase tracking-widest leading-relaxed">
+            Authorized access only. All activities are monitored for security purposes.
+          </p>
+        </motion.div>
+      </main>
+    );
+  }
 
   const handleOpenModal = (product?: Product) => {
     if (product) {
@@ -49,19 +255,24 @@ export const AdminView = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingProduct) {
-      updateProduct(editingProduct.id, formData);
-    } else {
-      addProduct(formData);
+    setIsSubmitting(true);
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, formData);
+      } else {
+        await addProduct(formData);
+      }
+      setIsModalOpen(false);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProduct(id);
+      await deleteProduct(id);
     }
   };
 
@@ -73,12 +284,21 @@ export const AdminView = () => {
             <h1 className="text-4xl font-serif mb-2">Admin Dashboard</h1>
             <p className="text-gray-500 text-sm">Manage your Veloura store inventory and products.</p>
           </div>
-          <button
-            onClick={() => handleOpenModal()}
-            className="btn-luxury flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add New Product
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => handleOpenModal()}
+              className="btn-luxury flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add New Product
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-3 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Product List */}
@@ -94,7 +314,16 @@ export const AdminView = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {products.map((product) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="w-4 h-4 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">Loading Inventory...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : products.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -300,14 +529,21 @@ export const AdminView = () => {
                 <div className="pt-6 flex gap-4">
                   <button
                     type="submit"
-                    className="btn-luxury flex-grow flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="btn-luxury flex-grow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Save className="w-4 h-4" /> {editingProduct ? 'Update Product' : 'Save Product'}
+                    {isSubmitting ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {editingProduct ? 'Update Product' : 'Save Product'}
                   </button>
                   <button
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => setIsModalOpen(false)}
-                    className="btn-outline flex-grow"
+                    className="btn-outline flex-grow disabled:opacity-50"
                   >
                     Cancel
                   </button>
