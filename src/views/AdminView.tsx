@@ -2,11 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useProducts } from '../context/ProductContext';
 import { Product, Category } from '../types';
-import { Plus, Edit2, Trash2, X, Upload, ExternalLink, Save, LogOut, Mail, Lock } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, ExternalLink, Save, LogOut, Mail, Lock, Database, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export const AdminView = () => {
-  const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, loading, addProduct, updateProduct, deleteProduct, isDemoMode, syncLocalToCloud } = useProducts();
+  const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name));
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success?: boolean; count?: number; error?: string } | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Check for suspicious keys
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const isSuspiciousKey = supabaseAnonKey.startsWith('sb_publishable_') || supabaseAnonKey.startsWith('pk_');
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!isDemoMode) {
+        try {
+          const { error } = await supabase.from('products').select('count', { count: 'exact', head: true });
+          if (error) {
+            setConnectionError(error.message);
+          } else {
+            setConnectionError(null);
+          }
+        } catch (err: any) {
+          setConnectionError(err.message || 'Connection failed');
+        }
+      }
+    };
+    checkConnection();
+  }, [isDemoMode]);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncResult(null);
+    const result = await syncLocalToCloud();
+    setSyncResult(result);
+    setIsSyncing(false);
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -301,89 +335,202 @@ export const AdminView = () => {
           </div>
         </div>
 
-        {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) && (
-          <div className="bg-veloura-beige p-6 rounded-xl mb-12 border border-veloura-gold/20">
-            <h3 className="text-sm font-serif italic mb-2">Demo Mode Active</h3>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              You are currently in Demo Mode. Any products you add, edit, or delete are saved <strong>locally to this browser only</strong>. 
-              To sync your products across all devices (like your mobile phone), you will need to connect a Supabase database.
-            </p>
+        {(!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="lg:col-span-2 bg-veloura-beige p-8 rounded-2xl border border-veloura-gold/20 flex flex-col md:flex-row gap-6 items-start">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                <Database className="w-6 h-6 text-veloura-gold" />
+              </div>
+              <div>
+                <h3 className="text-lg font-serif italic mb-2">Demo Mode: Local Storage Only</h3>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                  You are currently adding products to this device's <strong>Local Storage</strong>. 
+                  These products will <strong>not</strong> appear on your mobile phone or other browsers until you connect a database.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg border border-veloura-gold/10">
+                    <RefreshCw className="w-3 h-3 text-veloura-gold" />
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-gray-600">Sync Disabled</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg border border-veloura-gold/10">
+                    <Cloud className="w-3 h-3 text-gray-400" />
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-gray-400">Cloud Offline</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle className="w-4 h-4 text-veloura-gold" />
+                <h4 className="text-[10px] uppercase tracking-widest font-bold text-veloura-ink">How to Sync Devices</h4>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed mb-4">
+                To see your products on mobile, you must set up a free <strong>Supabase</strong> project and add the keys to your environment variables.
+              </p>
+              <a 
+                href="https://supabase.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[10px] uppercase tracking-widest font-bold text-veloura-gold hover:underline flex items-center gap-1"
+              >
+                Setup Supabase Guide →
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-12 space-y-6">
+            <div className={`p-8 rounded-2xl border ${connectionError || isSuspiciousKey ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'}`}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <Database className={`w-5 h-5 ${connectionError || isSuspiciousKey ? 'text-red-500' : 'text-emerald-500'}`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-lg font-serif italic ${connectionError || isSuspiciousKey ? 'text-red-900' : 'text-emerald-900'}`}>
+                      {connectionError ? 'Database Connection Error' : isSuspiciousKey ? 'Suspicious API Key' : 'Cloud Sync Active'}
+                    </h3>
+                    <p className={`text-xs ${connectionError || isSuspiciousKey ? 'text-red-700' : 'text-emerald-700'}`}>
+                      {connectionError 
+                        ? `Error: ${connectionError}` 
+                        : isSuspiciousKey 
+                          ? 'Your Supabase Anon Key looks like a Stripe key (starts with sb_publishable_). Please check your keys.' 
+                          : 'Your products are now syncing across all devices.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleSync}
+                    disabled={isSyncing || !!connectionError}
+                    className={`px-6 py-2.5 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all flex items-center justify-center gap-2
+                      ${connectionError 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                        : 'bg-veloura-gold text-white hover:bg-veloura-ink shadow-sm'}`}
+                  >
+                    {isSyncing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                    {isSyncing ? 'Syncing...' : 'Migrate Local Products to Cloud'}
+                  </button>
+                  {syncResult && (
+                    <p className={`text-[9px] text-center font-bold ${syncResult.success ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {syncResult.success 
+                        ? `Successfully migrated ${syncResult.count} products!` 
+                        : `Sync failed: ${syncResult.error}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+              <h4 className="text-[10px] uppercase tracking-widest font-bold text-veloura-ink mb-4">Required Database Setup</h4>
+              <p className="text-xs text-gray-500 mb-4">
+                If you haven't already, you <strong>must</strong> run this SQL in your Supabase SQL Editor to create the products table:
+              </p>
+              <pre className="bg-gray-900 text-gray-50 p-4 rounded-lg text-[10px] overflow-x-auto font-mono">
+{`-- Create products table
+create table products (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  description text,
+  price numeric not null,
+  image text,
+  category text not null,
+  "affiliateUrl" text,
+  "isFeatured" boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable Row Level Security (RLS)
+alter table products enable row level security;
+
+-- Create policy to allow everyone to read
+create policy "Allow public read access" on products
+  for select using (true);
+
+-- Create policy to allow authenticated users to manage
+create policy "Allow authenticated manage" on products
+  for all using (true);`}
+              </pre>
+            </div>
           </div>
         )}
 
         {/* Product List */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-gray-500">Product</th>
-                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-gray-500">Category</th>
-                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-gray-500">Price</th>
-                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-gray-500 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="w-4 h-4 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">Loading Inventory...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-12 h-12 rounded-sm object-cover bg-gray-100"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-veloura-ink">{product.name}</p>
-                          <p className="text-xs text-gray-400 truncate max-w-[200px]">{product.description}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-veloura-beige text-veloura-ink text-[10px] uppercase tracking-widest font-bold rounded-full">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500">Inventory (Sorted A-Z)</h3>
+            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+              <RefreshCw className="w-3 h-3" />
+              <span>Auto-updates on change</span>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-veloura-gold/20 scrollbar-track-transparent">
+            <div className="flex gap-6 min-w-max">
+              {loading ? (
+                <div className="flex items-center justify-center w-full py-12">
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">Loading Inventory...</span>
+                  </div>
+                </div>
+              ) : sortedProducts.map((product) => (
+                <div key={product.id} className="w-72 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden flex flex-col group hover:border-veloura-gold/30 transition-all">
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleOpenModal(product)}
+                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-veloura-gold shadow-sm transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-red-500 shadow-sm transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="absolute bottom-3 left-3">
+                      <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-veloura-ink text-[8px] uppercase tracking-widest font-bold rounded-full shadow-sm">
                         {product.category}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      ${product.price}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenModal(product)}
-                          className="p-2 text-gray-400 hover:text-veloura-gold transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {products.length === 0 && (
-            <div className="py-20 text-center">
-              <p className="text-gray-400 italic">No products found. Start by adding one.</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex-grow flex flex-col">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-sm font-medium text-veloura-ink line-clamp-1">{product.name}</h4>
+                      <span className="text-sm font-serif italic text-veloura-gold">${product.price}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4 flex-grow">
+                      {product.description}
+                    </p>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                      {product.isFeatured && (
+                        <span className="text-[8px] uppercase tracking-widest font-bold text-veloura-gold flex items-center gap-1">
+                          <Save className="w-2 h-2" /> Featured
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!loading && sortedProducts.length === 0 && (
+                <div className="w-full py-20 text-center flex flex-col items-center justify-center min-w-[300px]">
+                  <p className="text-gray-400 italic">No products found. Start by adding one.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

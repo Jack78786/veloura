@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Instagram, Facebook, Twitter } from 'lucide-react';
+import { ShoppingBag, Menu, X, Instagram, Facebook, Twitter, Info, CloudOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useProducts } from '../context/ProductContext';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showDemoInfo, setShowDemoInfo] = useState(false);
   const location = useLocation();
+  const { isDemoMode, products } = useProducts();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,11 +58,75 @@ export const Navbar = () => {
 
         {/* Icons */}
         <div className="flex items-center space-x-4">
+          {isDemoMode && (
+            <button 
+              onClick={() => setShowDemoInfo(true)}
+              className="flex items-center gap-1 px-2 py-1 bg-veloura-beige rounded-full text-[9px] uppercase tracking-widest font-bold text-veloura-gold border border-veloura-gold/20 hover:bg-veloura-gold hover:text-white transition-all"
+            >
+              <CloudOff className="w-3 h-3" />
+              <span className="hidden sm:inline">Demo Mode</span>
+            </button>
+          )}
           <button className="hover-gold transition-colors">
             <ShoppingBag className="w-5 h-5" />
           </button>
         </div>
       </div>
+
+      {/* Demo Info Modal */}
+      <AnimatePresence>
+        {showDemoInfo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDemoInfo(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl text-center"
+            >
+              <div className="w-16 h-16 bg-veloura-beige rounded-full flex items-center justify-center mx-auto mb-6">
+                <CloudOff className="w-8 h-8 text-veloura-gold" />
+              </div>
+              <h2 className="text-2xl font-serif mb-4">Device-Specific Storage</h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                You are currently in <strong>Demo Mode</strong>. Products you add are saved only to this device's browser (LocalStorage).
+                <br />
+                <span className="text-[10px] text-veloura-gold mt-2 block">Current session: {products.length} products loaded</span>
+              </p>
+              <div className="bg-gray-50 p-4 rounded-xl text-left mb-8">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">Why can't I see my products on mobile?</p>
+                <p className="text-xs text-gray-600 mb-3">
+                  1. <strong>Device-Specific:</strong> LocalStorage only exists on the device where you added the products.
+                </p>
+                <p className="text-xs text-gray-600">
+                  2. <strong>Domain-Specific:</strong> Your "Dev" URL and "Shared" URL are different. Products added on one won't show on the other.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Link 
+                  to="/admin" 
+                  onClick={() => setShowDemoInfo(false)}
+                  className="btn-luxury w-full py-3 text-center"
+                >
+                  Go to Admin Dashboard
+                </Link>
+                <button 
+                  onClick={() => setShowDemoInfo(false)}
+                  className="text-[10px] uppercase tracking-widest font-bold text-gray-400 hover:text-veloura-ink"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -101,6 +168,8 @@ export const Navbar = () => {
 };
 
 export const Footer = () => {
+  const { isDemoMode } = useProducts();
+  
   return (
     <footer className="bg-veloura-ink text-white pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
@@ -153,9 +222,15 @@ export const Footer = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-6 pt-10 border-t border-gray-800 text-center">
-        <p className="text-xs text-gray-500 tracking-widest uppercase">
+        <p className="text-xs text-gray-500 tracking-widest uppercase mb-4">
           &copy; {new Date().getFullYear()} Veloura Fashion. All rights reserved.
         </p>
+        {isDemoMode && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-medium">Demo Mode: Local Storage Only</span>
+          </div>
+        )}
       </div>
     </footer>
   );

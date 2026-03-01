@@ -9,7 +9,9 @@ import { Link } from 'react-router-dom';
 
 export const HomeView = () => {
   const { products, loading } = useProducts();
-  const featuredProducts = products.filter(p => p.isFeatured);
+  const featuredProducts = [...products]
+    .filter(p => p.isFeatured)
+    .sort((a, b) => a.name.localeCompare(b.name));
   const featuredPins = PINS.slice(0, 3);
 
   if (loading) {

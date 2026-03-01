@@ -6,9 +6,11 @@ import { supabase } from '../lib/supabase';
 interface ProductContextType {
   products: Product[];
   loading: boolean;
+  isDemoMode: boolean;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  syncLocalToCloud: () => Promise<{ success: boolean; count: number; error?: string }>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Helper to check if Supabase is configured
   const isSupabaseConfigured = () => {
@@ -28,16 +31,20 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Fetch products from Supabase or LocalStorage on mount
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!isSupabaseConfigured()) {
+      const configured = isSupabaseConfigured();
+      setIsDemoMode(!configured);
+
+      if (!configured) {
         console.warn('Supabase not configured. Using LocalStorage/Initial products.');
-        const savedProducts = localStorage.getItem('veloura_demo_products');
-        if (savedProducts) {
-          try {
+        try {
+          const savedProducts = localStorage.getItem('veloura_demo_products');
+          if (savedProducts) {
             setProducts(JSON.parse(savedProducts));
-          } catch (e) {
+          } else {
             setProducts(INITIAL_PRODUCTS);
           }
-        } else {
+        } catch (e) {
+          console.error('LocalStorage access failed:', e);
           setProducts(INITIAL_PRODUCTS);
         }
         setLoading(false);
@@ -146,8 +153,45 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const syncLocalToCloud = async () => {
+    if (!isSupabaseConfigured()) {
+      return { success: false, count: 0, error: 'Supabase not configured' };
+    }
+
+    try {
+      const savedProducts = localStorage.getItem('veloura_demo_products');
+      if (!savedProducts) return { success: true, count: 0 };
+
+      const localProducts: Product[] = JSON.parse(savedProducts);
+      if (localProducts.length === 0) return { success: true, count: 0 };
+
+      // Filter out products that might already be in DB or have demo IDs
+      const productsToUpload = localProducts.map(({ id, ...rest }) => rest);
+
+      const { data, error } = await supabase
+        .from('products')
+        .insert(productsToUpload)
+        .select();
+
+      if (error) throw error;
+
+      // Clear local storage after successful sync
+      localStorage.removeItem('veloura_demo_products');
+      
+      // Refresh products list
+      if (data) {
+        setProducts((prev) => [...data, ...prev]);
+      }
+
+      return { success: true, count: productsToUpload.length };
+    } catch (err: any) {
+      console.error('Sync failed:', err);
+      return { success: false, count: 0, error: err.message || 'Unknown error' };
+    }
+  };
+
   return (
-    <ProductContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct }}>
+    <ProductContext.Provider value={{ products, loading, isDemoMode, addProduct, updateProduct, deleteProduct, syncLocalToCloud }}>
       {children}
     </ProductContext.Provider>
   );
