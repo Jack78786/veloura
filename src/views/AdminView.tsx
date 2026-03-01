@@ -467,69 +467,67 @@ create policy "Allow authenticated manage" on products
             </div>
           </div>
           
-          <div className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-veloura-gold/20 scrollbar-track-transparent">
-            <div className="flex gap-6 min-w-max">
-              {loading ? (
-                <div className="flex items-center justify-center w-full py-12">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">Loading Inventory...</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {loading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-veloura-gold border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">Loading Inventory...</span>
+                </div>
+              </div>
+            ) : sortedProducts.map((product) => (
+              <div key={product.id} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden flex flex-col group hover:border-veloura-gold/30 transition-all">
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleOpenModal(product)}
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-veloura-gold shadow-sm transition-colors"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-red-500 shadow-sm transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-3 left-3">
+                    <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-veloura-ink text-[8px] uppercase tracking-widest font-bold rounded-full shadow-sm">
+                      {product.category}
+                    </span>
                   </div>
                 </div>
-              ) : sortedProducts.map((product) => (
-                <div key={product.id} className="w-72 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden flex flex-col group hover:border-veloura-gold/30 transition-all">
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleOpenModal(product)}
-                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-veloura-gold shadow-sm transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-veloura-ink hover:text-red-500 shadow-sm transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-veloura-ink text-[8px] uppercase tracking-widest font-bold rounded-full shadow-sm">
-                        {product.category}
+                <div className="p-4 flex-grow flex flex-col">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-sm font-medium text-veloura-ink line-clamp-1">{product.name}</h4>
+                    <span className="text-sm font-serif italic text-veloura-gold">${product.price}</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4 flex-grow">
+                    {product.description}
+                  </p>
+                  <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                    {product.isFeatured && (
+                      <span className="text-[8px] uppercase tracking-widest font-bold text-veloura-gold flex items-center gap-1">
+                        <Save className="w-2 h-2" /> Featured
                       </span>
-                    </div>
-                  </div>
-                  <div className="p-4 flex-grow flex flex-col">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-sm font-medium text-veloura-ink line-clamp-1">{product.name}</h4>
-                      <span className="text-sm font-serif italic text-veloura-gold">${product.price}</span>
-                    </div>
-                    <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-4 flex-grow">
-                      {product.description}
-                    </p>
-                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                      {product.isFeatured && (
-                        <span className="text-[8px] uppercase tracking-widest font-bold text-veloura-gold flex items-center gap-1">
-                          <Save className="w-2 h-2" /> Featured
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-              ))}
-              {!loading && sortedProducts.length === 0 && (
-                <div className="w-full py-20 text-center flex flex-col items-center justify-center min-w-[300px]">
-                  <p className="text-gray-400 italic">No products found. Start by adding one.</p>
-                </div>
-              )}
-            </div>
+              </div>
+            ))}
+            {!loading && sortedProducts.length === 0 && (
+              <div className="col-span-full py-20 text-center flex flex-col items-center justify-center">
+                <p className="text-gray-400 italic">No products found. Start by adding one.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
